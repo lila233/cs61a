@@ -182,22 +182,17 @@ def play(strategy0, strategy1, score0=0, score1=0, dice=six_sided,
     while score0 < goal and score1 < goal:
         if not who:
             t0 = strategy0(score0, score1)
-            if t0:
-                score0 += take_turn(t0, score1, dice)
-            else:
-                score0 += free_bacon(score1)
+            score0 += take_turn(t0, score1, dice)
+            say = say(score0, score1)
             if (pig_pass(score0, score1) or swine_align(score0, score1)) and score0 < goal:
                 continue
-            who = other(who)
         else:
             t1 = strategy1(score1, score0)
-            if t1:
-                score1 += take_turn(t1, score0, dice)
-            else:
-                score1 += free_bacon(score0)
+            score1 += take_turn(t1, score0, dice)
+            say = say(score0, score1)
             if (pig_pass(score1, score0) or swine_align(score1, score0)) and score1 < goal:
                 continue
-            who =  other(who)
+        who =  other(who)
     # END PROBLEM 5
     # (note that the indentation for the problem 6 prompt (***YOUR CODE HERE***) might be misleading)
     # BEGIN PROBLEM 6
@@ -286,6 +281,23 @@ def announce_highest(who, last_score=0, running_high=0):
     assert who == 0 or who == 1, 'The who argument should indicate a player.'
     # BEGIN PROBLEM 7
     "*** YOUR CODE HERE ***"
+    def announce(score0, score1):
+        if not who:
+            score = score0 - last_score
+            if score > running_high:
+                running_high0 = score
+                print(score, 'point(s)! The most yet for Player', who)
+                return announce_highest(who, score0, running_high0)
+            return announce_highest(who, score0, running_high)
+        else:
+            score = score1 - last_score
+            if score > running_high:
+                running_high1 = score
+                print(score, 'point(s)! The most yet for Player', who)
+                return announce_highest(who, score1, running_high1)
+            return announce_highest(who, score1, running_high)
+    return announce
+
     # END PROBLEM 7
 
 
@@ -326,6 +338,13 @@ def make_averaged(original_function, trials_count=1000):
     """
     # BEGIN PROBLEM 8
     "*** YOUR CODE HERE ***"
+    def new_func(*args):
+        count, total = 0, 0
+        while count < trials_count:
+            total += original_function(*args)
+            count += 1
+        return total / trials_count
+    return new_func     
     # END PROBLEM 8
 
 
@@ -340,6 +359,14 @@ def max_scoring_num_rolls(dice=six_sided, trials_count=1000):
     """
     # BEGIN PROBLEM 9
     "*** YOUR CODE HERE ***"
+    i, j, highest = 1, 1, 0
+    while i <= 10:
+        score = make_averaged(roll_dice, trials_count)(i, dice)
+        if score > highest:
+            j = i
+            highest = score
+        i += 1
+    return j
     # END PROBLEM 9
 
 
@@ -389,6 +416,10 @@ def bacon_strategy(score, opponent_score, cutoff=8, num_rolls=6):
     rolls NUM_ROLLS otherwise.
     """
     # BEGIN PROBLEM 10
+    if free_bacon(opponent_score) >= cutoff:
+        return 0
+    else:
+        return num_rolls
     return 6  # Replace this statement
     # END PROBLEM 10
 
@@ -399,16 +430,24 @@ def extra_turn_strategy(score, opponent_score, cutoff=8, num_rolls=6):
     Otherwise, it rolls NUM_ROLLS.
     """
     # BEGIN PROBLEM 11
+    if extra_turn(free_bacon(opponent_score) + score, opponent_score):
+        return 0
+    else:
+        return bacon_strategy(score, opponent_score, cutoff, num_rolls)
     return 6  # Replace this statement
     # END PROBLEM 11
 
 
 def final_strategy(score, opponent_score):
     """Write a brief description of your final strategy.
-
+    default: extra_turn_strategy
     *** YOUR DESCRIPTION HERE ***
     """
     # BEGIN PROBLEM 12
+    if not extra_turn_strategy(score, opponent_score, cutoff = 8, num_rolls = 5):
+        return 0
+    else:
+        return extra_turn_strategy(score, opponent_score, cutoff = 8, num_rolls = 5)
     return 6  # Replace this statement
     # END PROBLEM 12
 
